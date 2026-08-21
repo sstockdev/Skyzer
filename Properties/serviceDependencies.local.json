@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "secrets1": {
+      "type": "secrets.user"
+    },
+    "mongodb1": {
+      "containerPorts": "27018:27018",
+      "secretStore": "LocalSecretsFile",
+      "containerName": "mongodb",
+      "containerImage": "mongo",
+      "resourceId": null,
+      "type": "mongodb.container",
+      "connectionId": "ConnectionStrings:DatabaseConnection"
+    }
+  }
+}
