@@ -1,21 +1,17 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SkyzerSync.Models
 {
     /// <summary>
     /// The model for an auction on Hypixel Skyblock
     /// </summary>
-    class Auction
+    public class Auction
     {
         /// <summary>
         /// The uuid of the auction.
         /// </summary>
         [BsonId]
-        [BsonIgnoreIfDefault]
         [JsonProperty("uuid")]
         public string Uuid { get; set; }
         /// <summary>
@@ -81,7 +77,7 @@ namespace SkyzerSync.Models
         /// The starting amount of coins the auctioneer has placed.
         /// </summary>
         [JsonProperty("starting_bid")]
-        public int StartingBid { get; set; }
+        public long StartingBid { get; set; }
         /// <summary>
         /// The auction item's NBT data.
         /// </summary>
@@ -103,7 +99,7 @@ namespace SkyzerSync.Models
         /// (and probably the current bid amount / how much it was bought for)
         /// </summary>
         [JsonProperty("highest_bid_amount")]
-        public int HighestBidAmount { get; set; }
+        public long HighestBidAmount { get; set; }
         /// <summary>
         /// The UnixTime of the last time the auction was updated.
         /// </summary>

@@ -9,7 +9,7 @@ namespace SkyzerSync.Models
     /// The model that contains the information
     /// about a bid a player has placed on an auction.
     /// </summary>
-    class Bid
+    public class Bid
     {
         /// <summary>
         /// The uuid of the auction the bid was placed for.

@@ -1,14 +1,11 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SkyzerSync.Models
 {
     /// <summary>
     /// The model for the response given by Hypixel API. https://api.hypixel.net/#tag/SkyBlock/paths/~1v2~1skyblock~1auctions/get
     /// </summary>
-    class ActiveAuctionResponse
+    public class ActiveAuctionResponse
     {
         /// <summary>
         /// Whether or not the request was a success.
