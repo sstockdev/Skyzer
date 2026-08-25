@@ -35,12 +35,12 @@ namespace SkyzerSync.Models
         /// The UnixTime the auction started.
         /// </summary>
         [JsonProperty("start")]
-        public object Start { get; set; }
+        public long Start { get; set; }
         /// <summary>
         /// The UnixTime the auction will expire.
         /// </summary>
         [JsonProperty("end")]
-        public object End { get; set; }
+        public long End { get; set; }
         /// <summary>
         /// The name of the item that is being auctioned.
         /// </summary>
@@ -93,7 +93,7 @@ namespace SkyzerSync.Models
         /// Contains a list of player uuid's
         /// </summary>
         [JsonProperty("claimed_bidders")]
-        public List<object> ClaimedBidders { get; set; }
+        public List<string> ClaimedBidders { get; set; }
         /// <summary>
         /// The highest amount of coins that has been bid for the item.
         /// (and probably the current bid amount / how much it was bought for)
@@ -104,7 +104,7 @@ namespace SkyzerSync.Models
         /// The UnixTime of the last time the auction was updated.
         /// </summary>
         [JsonProperty("last_updated")]
-        public object LastUpdated { get; set; }
+        public long LastUpdated { get; set; }
         /// <summary>
         /// Is this auction a BIN (buy it now)?
         /// </summary>

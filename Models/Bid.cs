@@ -35,6 +35,6 @@ namespace SkyzerSync.Models
         /// The UnixTime the bidder placed the bid.
         /// </summary>
         [JsonProperty("timestamp")]
-        public object Timestamp { get; set; }
+        public long Timestamp { get; set; }
     }
 }
