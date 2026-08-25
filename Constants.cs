@@ -11,10 +11,5 @@
         /// The starting page of the auctions API endpoint.
         /// </summary>
         public const int ACTIVE_AUCTIONS_STARTING_PAGE = 0;
-
-        /// <summary>
-        /// The delay (in milliseconds) to add to the task delay between cycles (to prevent grabbing the same cycle twice in a row)
-        /// </summary>
-        public const int ACTIVE_AUCTIONS_TASK_DELAY = 20;
     }
 }
