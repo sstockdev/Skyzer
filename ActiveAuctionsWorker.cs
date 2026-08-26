@@ -14,14 +14,16 @@ namespace SkyzerSync
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            var cyclesCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Cycle>("cycles");
-
+            var cyclesCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Cycle>("active_auctions_cycles");
             int sleepTime = -1;
 
             while (!stoppingToken.IsCancellationRequested)
             {
                 if (sleepTime > 0)
+                {
+                    logger.LogInformation("Sleeping for {SleepTimeInSeconds} seconds", sleepTime / 1000);
                     await Task.Delay(sleepTime, stoppingToken);
+                }
 
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
@@ -38,18 +40,22 @@ namespace SkyzerSync
 
                     logger.LogInformation("Startin cycle {}", firstPage.LastUpdated);
 
-                    if (await IsCycleProcessed(cyclesCollection, firstPage.LastUpdated, stoppingToken))
+                    if (await Helper.IsCycleProcessed(cyclesCollection, firstPage.LastUpdated, stoppingToken))
                     {
                         logger.LogInformation("Cycle {Cycle} was already processed, returning.", firstPage.LastUpdated);
-                        sleepTime = TimeToWait(firstPage.LastUpdated); // if the cycle has already been processed, wait for the next cycle
+                        sleepTime = Helper.TimeToWait(firstPage.LastUpdated); // if the cycle has already been processed, wait for the next cycle
                         continue;
                     }
                     else
-                        await ProcessCycle(cyclesCollection, firstPage.LastUpdated, stoppingToken);
+                        await Helper.ProcessCycle(cyclesCollection, firstPage.LastUpdated, stoppingToken);
 
                     await Parallel.ForEachAsync(firstPage.Auctions, async (auction, stoppingToken) =>
                     {
                         var auctionsCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Auction>("auctions");
+
+                        // we don't care about non buy it now auctions
+                        if (!auction.Bin)
+                            return;
 
                         // filter to the auction by uuid
                         var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, auction.Uuid);
@@ -74,6 +80,10 @@ namespace SkyzerSync
 
                             await Parallel.ForEachAsync(page.Auctions, async (auction, stoppingToken) =>
                             {
+
+                                if (!auction.Bin)
+                                    return;
+
                                 // filter to the auction by uuid
                                 var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, auction.Uuid);
 
@@ -89,7 +99,7 @@ namespace SkyzerSync
                         }
                     });
 
-                    sleepTime = TimeToWait(firstPage.LastUpdated);
+                    sleepTime = Helper.TimeToWait(firstPage.LastUpdated);
                 }
                 catch (HttpRequestException ex)
                 {
@@ -100,44 +110,7 @@ namespace SkyzerSync
 
                 stopwatch.Stop();
                 logger.LogInformation("Took {Elapsed} seconds to sync cycle.", stopwatch.Elapsed);
-                logger.LogInformation("Sleeping for {SleepTimeInSeconds} seconds", sleepTime / 1000);
             }
-        }
-
-        /// <summary>
-        /// Method to determine if a cycle has already been processed.
-        /// </summary>
-        /// <param name="cyclesCollection">A mongodb collection of type Cycle</param>
-        /// <param name="cycle">The LastUpdatedTime of the active auction page's response.</param>
-        /// <returns>True if the cycle has already been processed.</returns>
-        private static async Task<bool> IsCycleProcessed(IMongoCollection<Cycle> cyclesCollection, long cycle, CancellationToken stoppingToken)
-        {
-            var filter = Builders<Cycle>.Filter.Eq(c => c.Id, cycle);
-            var result = await cyclesCollection.Find(filter).FirstOrDefaultAsync();
-            return result != null;
-        }
-
-        /// <summary>
-        /// Method to process a cycle. It stores the cycle's Id in the mongo collection.
-        /// </summary>
-        /// <param name="cyclesCollection">A mongodb collection of type Cycle</param>
-        /// <param name="cycle">The LastUpdatedTime of the active auction page's response.</param>
-        private static async Task ProcessCycle(IMongoCollection<Cycle> cyclesCollection, long cycle, CancellationToken stoppingToken)
-        {
-            await cyclesCollection.InsertOneAsync(new Cycle { Id = cycle }, cancellationToken: stoppingToken);
-        }
-
-        /// <summary>
-        /// Helper method that calculates how long the worker should wait before
-        /// checking Hypixel's active auctions API endpoint.
-        /// </summary>
-        /// <param name="lastUpdated">The last known update time from the endpoint.</param>
-        /// <returns>How long to wait in milliseconds</returns>
-        private static int TimeToWait(long lastUpdated)
-        {
-            long now = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
-            int timeToWait = (int)(now - lastUpdated);
-            return timeToWait;
         }
     }
 }

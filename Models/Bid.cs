@@ -30,7 +30,7 @@ namespace SkyzerSync.Models
         /// The amount of coins the bidder placed on the bid.
         /// </summary>
         [JsonProperty("amount")]
-        public int Amount { get; set; }
+        public long Amount { get; set; }
         /// <summary>
         /// The UnixTime the bidder placed the bid.
         /// </summary>

@@ -16,5 +16,10 @@
         /// The ended auctions API endpoint from Hypixel API.
         /// </summary>
         public const string ENDED_AUCTIONS_URL = "https://api.hypixel.net/v2/skyblock/auctions_ended";
+
+        /// <summary>
+        /// The standard delay between api endpoint updates in milliseconds.
+        /// </summary>
+        public const int API_DELAY = 60000;
     }
 }
