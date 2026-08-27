@@ -43,7 +43,8 @@ namespace SkyzerSync
                     if (await Helper.IsCycleProcessed(cyclesCollection, firstPage.LastUpdated, stoppingToken))
                     {
                         logger.LogInformation("Cycle {Cycle} was already processed, returning.", firstPage.LastUpdated);
-                        sleepTime = Helper.TimeToWait(firstPage.LastUpdated); // if the cycle has already been processed, wait for the next cycle
+                        // if the cycle has already been processed, wait for the next cycle plus a little delay
+                        sleepTime = Helper.TimeToWait(firstPage.LastUpdated, Constants.ACTIVE_AUCTIONS_DELAY);
                         continue;
                     }
                     else
@@ -99,7 +100,7 @@ namespace SkyzerSync
                         }
                     });
 
-                    sleepTime = Helper.TimeToWait(firstPage.LastUpdated);
+                    sleepTime = sleepTime = Helper.TimeToWait(firstPage.LastUpdated, Constants.ACTIVE_AUCTIONS_DELAY);
                 }
                 catch (HttpRequestException ex)
                 {

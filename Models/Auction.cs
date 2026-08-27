@@ -25,7 +25,7 @@ namespace SkyzerSync.Models
         /// The profile uuid of the player who made the auction.
         /// </summary>
         [JsonProperty("profile_id")]
-        public required string ProfileId { get; set; }
+        public string? ProfileId { get; set; }
 
         /// <summary>
         /// The list of player uuids in the auctioneer's co-op.
@@ -51,13 +51,13 @@ namespace SkyzerSync.Models
         /// The name of the item that is being auctioned.
         /// </summary>
         [JsonProperty("item_name")]
-        public required string ItemName { get; set; }
+        public string? ItemName { get; set; }
 
         /// <summary>
         /// The lore description of the item that is being auctioned.
         /// </summary>
         [JsonProperty("item_lore")]
-        public required string ItemLore { get; set; }
+        public string? ItemLore { get; set; }
 
         /// <summary>
         /// Extra lore about the item?
@@ -93,7 +93,7 @@ namespace SkyzerSync.Models
         /// The auction item's NBT data.
         /// </summary>
         [JsonProperty("item_bytes")]
-        public required string ItemBytes { get; set; }
+        public string? ItemBytes { get; set; }
 
         /// <summary>
         /// Has the auction item been claimed already?
@@ -106,7 +106,7 @@ namespace SkyzerSync.Models
         /// Contains a list of player uuid's
         /// </summary>
         [JsonProperty("claimed_bidders")]
-        public required List<string> ClaimedBidders { get; set; }
+        public List<string>? ClaimedBidders { get; set; }
 
         /// <summary>
         /// The highest amount of coins that has been bid for the item.
@@ -137,6 +137,6 @@ namespace SkyzerSync.Models
         /// The uuid of the auction item.
         /// </summary>
         [JsonProperty("item_uuid")]
-        public required string ItemUuid { get; set; }
+        public string? ItemUuid { get; set; }
     }
 }

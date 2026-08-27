@@ -36,6 +36,6 @@ namespace SkyzerSync.Models
         /// The list of current auctions.
         /// </summary>
         [JsonProperty("auctions")]
-        public List<Auction> Auctions { get; set; }
+        public List<Auction>? Auctions { get; set; }
     }
 }

@@ -37,12 +37,12 @@ namespace SkyzerSync
         /// </summary>
         /// <param name="lastUpdated">The last known update time from the endpoint.</param>
         /// <returns>How long to wait in milliseconds</returns>
-        public static int TimeToWait(long lastUpdated)
+        public static int TimeToWait(long lastUpdated, long apiDelay)
         {
-            long now = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
+            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             // last updated + api delay = next update; next update - now is how long to wait
-            long timeToWait = (lastUpdated + Constants.API_DELAY) - now;
+            long timeToWait = (lastUpdated + apiDelay) - now;
             return (int)timeToWait;
         }
     }

@@ -6,7 +6,7 @@ using System.Net.Http.Json;
 
 namespace SkyzerSync
 {
-    public class AuctionsEndedWorker(ILogger<ActiveAuctionsWorker> logger) : BackgroundService
+    public class AuctionsEndedWorker(ILogger<AuctionsEndedWorker> logger) : BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -42,7 +42,7 @@ namespace SkyzerSync
                     if (!page.Success)
                     {
                         logger.LogWarning("hypixel returned success false");
-                        sleepTime = Helper.TimeToWait(page.LastUpdated);
+                        sleepTime = Helper.TimeToWait(page.LastUpdated, Constants.ENDED_AUCTIONS_DELAY);
                         continue;
                     }
 
@@ -51,7 +51,11 @@ namespace SkyzerSync
                     if (await Helper.IsCycleProcessed(endedCyclesCollection, page.LastUpdated, stoppingToken))
                     {
                         logger.LogInformation("Cycle {Cycle} was already processed, returning.", page.LastUpdated);
-                        sleepTime = Helper.TimeToWait(page.LastUpdated); // wait until the next cycle
+                        logger.LogInformation("Current Unix Time: {UtcNow}", DateTimeOffset.UtcNow);
+                        logger.LogInformation("TimeToWait says next update is at: {NextUpdate}", DateTimeOffset.FromUnixTimeMilliseconds(page.LastUpdated + Constants.API_DELAY));
+
+                        // if the cycle has already been processed, wait for the next cycle plus a little delay
+                        sleepTime = Helper.TimeToWait(page.LastUpdated, Constants.ENDED_AUCTIONS_DELAY);
                         continue;
                     }
                     else
@@ -95,10 +99,17 @@ namespace SkyzerSync
                             // Add the winning bid to the bids
                             .Push(a => a.Bids, winningBid);
 
-                        await auctionsCollection.UpdateOneAsync(filter, update, cancellationToken: stoppingToken);
+                        try
+                        {
+                            await auctionsCollection.UpdateOneAsync(filter, update, cancellationToken: stoppingToken);
+                        }
+                        catch
+                        {
+                            // tried to update, if it was unable to find that auction we fail silently. We really only care about auctions that already exist
+                        }
                     });
 
-                    sleepTime = Helper.TimeToWait(page.LastUpdated);
+                    sleepTime = Helper.TimeToWait(page.LastUpdated, Constants.ENDED_AUCTIONS_DELAY);
 
                 }
                 catch (HttpRequestException ex)
