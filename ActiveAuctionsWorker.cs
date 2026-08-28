@@ -38,7 +38,7 @@ namespace SkyzerSync
                         continue;
                     }
 
-                    logger.LogInformation("Startin cycle {}", firstPage.LastUpdated);
+                    logger.LogInformation("Starting cycle {}", firstPage.LastUpdated);
 
                     if (await Helper.IsCycleProcessed(cyclesCollection, firstPage.LastUpdated, stoppingToken))
                     {
