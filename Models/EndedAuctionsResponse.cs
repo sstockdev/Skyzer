@@ -1,14 +1,14 @@
-﻿using Newtonsoft.Json;
-using SkyzerSync.Models;
+﻿using SkyzerSync.Models;
+using System.Text.Json.Serialization;
 
 public class EndedAuctionsResponse
 {
-    [JsonProperty("success")]
+    [JsonPropertyName("success")]
     public bool Success { get; set; }
 
-    [JsonProperty("lastUpdated")]
+    [JsonPropertyName("lastUpdated")]
     public long LastUpdated { get; set; }
 
-    [JsonProperty("auctions")]
+    [JsonPropertyName("auctions")]
     public required List<EndedAuction> Auctions { get; set; }
 }

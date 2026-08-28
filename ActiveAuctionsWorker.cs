@@ -15,26 +15,26 @@ namespace SkyzerSync
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             var cyclesCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Cycle>("active_auctions_cycles");
-            int sleepTime = -1;
+            TimeSpan sleepTime = new();
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (sleepTime > 0)
+                if (sleepTime > TimeSpan.Zero)
                 {
-                    logger.LogInformation("Sleeping for {SleepTimeInSeconds} seconds", sleepTime / 1000);
+                    logger.LogInformation("Sleeping for {SleepTimeInSeconds} seconds", sleepTime.TotalSeconds);
                     await Task.Delay(sleepTime, stoppingToken);
                 }
 
-                Stopwatch stopwatch = new Stopwatch();
+                Stopwatch stopwatch = new();
                 stopwatch.Start();
 
                 try
                 {
                     var firstPage = await client.GetFromJsonAsync<ActiveAuctionResponse>(Constants.ACTIVE_AUCTIONS_URL, stoppingToken);
-                    if (firstPage == null)
+                    if (firstPage == null || firstPage.Auctions == null)
                     {
-                        logger.LogError("firstPage was null!");
-                        sleepTime = 1000; // if the first page is null, wait 1 second before trying again
+                        logger.LogError("firstPage or firstPage auctions were was null!");
+                        sleepTime = TimeSpan.FromSeconds(2); // if the first page is null, wait 1 second before trying again
                         continue;
                     }
 
@@ -42,9 +42,10 @@ namespace SkyzerSync
 
                     if (await Helper.IsCycleProcessed(cyclesCollection, firstPage.LastUpdated, stoppingToken))
                     {
-                        logger.LogInformation("Cycle {Cycle} was already processed, returning.", firstPage.LastUpdated);
+                        logger.LogInformation("Cycle {Cycle} was already processed, adding a slight delay.", firstPage.LastUpdated);
+
                         // if the cycle has already been processed, wait for the next cycle plus a little delay
-                        sleepTime = Helper.TimeToWait(firstPage.LastUpdated, Constants.ACTIVE_AUCTIONS_DELAY);
+                        sleepTime = Helper.TimeToWait(firstPage.LastUpdated).Add(TimeSpan.FromSeconds(2)) ;
                         continue;
                     }
                     else
@@ -73,9 +74,9 @@ namespace SkyzerSync
                         try
                         {
                             var page = await client.GetFromJsonAsync<ActiveAuctionResponse>(Constants.ACTIVE_AUCTIONS_URL + $"?page={i}", stoppingToken);
-                            if (page == null)
+                            if (page == null || page.Auctions == null)
                             {
-                                logger.LogError("page was null!");
+                                logger.LogError("page or auctions was null!");
                                 return; // continue; equivalent for Parallel.ForAsync
                             }
 
@@ -100,17 +101,17 @@ namespace SkyzerSync
                         }
                     });
 
-                    sleepTime = sleepTime = Helper.TimeToWait(firstPage.LastUpdated, Constants.ACTIVE_AUCTIONS_DELAY);
+                    sleepTime = Helper.TimeToWait(firstPage.LastUpdated);
                 }
                 catch (HttpRequestException ex)
                 {
                     logger.LogError(ex.Message);
-                    sleepTime = 1000; // if the first page returns an exception, wait 1 second before trying again
+                    sleepTime = TimeSpan.FromSeconds(2); // if the first page returns an exception, wait 1 second before trying again
                     continue;
                 }
 
                 stopwatch.Stop();
-                logger.LogInformation("Took {Elapsed} seconds to sync cycle.", stopwatch.Elapsed);
+                logger.LogInformation("Took {Elapsed} seconds to sync cycle.", stopwatch.Elapsed.TotalSeconds);
             }
         }
     }

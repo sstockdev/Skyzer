@@ -1,37 +1,34 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text.Json.Serialization;
 
 namespace SkyzerSync.Models
 {
     public class EndedAuction
     {
-        [JsonProperty("auction_id")]
+        [JsonPropertyName("auction_id")]
         public string? AuctionId { get; set; }
 
-        [JsonProperty("seller")]
+        [JsonPropertyName("seller")]
         public required string Seller { get; set; }
 
-        [JsonProperty("seller_profile")]
+        [JsonPropertyName("seller_profile")]
         public string? SellerProfile { get; set; }
 
-        [JsonProperty("buyer")]
+        [JsonPropertyName("buyer")]
         public string? Buyer { get; set; }
 
-        [JsonProperty("buyer_profile")]
+        [JsonPropertyName("buyer_profile")]
         public string? BuyerProfile { get; set; }
 
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public required long Timestamp { get; set; }
 
-        [JsonProperty("price")]
+        [JsonPropertyName("price")]
         public long Price { get; set; }
 
-        [JsonProperty("bin")]
+        [JsonPropertyName("bin")]
         public bool Bin { get; set; }
 
-        [JsonProperty("item_bytes")]
+        [JsonPropertyName("item_bytes")]
         public string? ItemBytes { get; set; }
     }
 }

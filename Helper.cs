@@ -36,14 +36,15 @@ namespace SkyzerSync
         /// checking Hypixel's active auctions API endpoint.
         /// </summary>
         /// <param name="lastUpdated">The last known update time from the endpoint.</param>
-        /// <returns>How long to wait in milliseconds</returns>
-        public static int TimeToWait(long lastUpdated, long apiDelay)
+        /// <returns>How long to wait in TimeSpan form</returns>
+        public static TimeSpan TimeToWait(long lastUpdated)
         {
-            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            DateTime goal = DateTime.UnixEpoch.AddMilliseconds(lastUpdated).AddSeconds(Constants.API_ENDPOINT_DELAY);
 
-            // last updated + api delay = next update; next update - now is how long to wait
-            long timeToWait = (lastUpdated + apiDelay) - now;
-            return (int)timeToWait;
+            if (goal > DateTime.UtcNow)
+                return goal - DateTime.UtcNow;
+            else
+                return TimeSpan.Zero;
         }
     }
 }

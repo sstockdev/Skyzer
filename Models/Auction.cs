@@ -1,5 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace SkyzerSync.Models
 {
@@ -12,19 +12,19 @@ namespace SkyzerSync.Models
         /// The uuid of the auction.
         /// </summary>
         [BsonId]
-        [JsonProperty("uuid")]
+        [JsonPropertyName("uuid")]
         public required string Uuid { get; set; }
 
         /// <summary>
         /// The uuid of the player who made the auction.
         /// </summary>
-        [JsonProperty("auctioneer")]
+        [JsonPropertyName("auctioneer")]
         public required string Auctioneer { get; set; }
 
         /// <summary>
         /// The profile uuid of the player who made the auction.
         /// </summary>
-        [JsonProperty("profile_id")]
+        [JsonPropertyName("profile_id")]
         public string? ProfileId { get; set; }
 
         /// <summary>
@@ -32,111 +32,111 @@ namespace SkyzerSync.Models
         /// If the player is not in a co-op, it contains just
         /// the auctioneer's uuid.
         /// </summary>
-        [JsonProperty("coop")]
+        [JsonPropertyName("coop")]
         public required List<string> Coop { get; set; }
 
         /// <summary>
         /// The UnixTime the auction started.
         /// </summary>
-        [JsonProperty("start")]
+        [JsonPropertyName("start")]
         public long Start { get; set; }
 
         /// <summary>
         /// The UnixTime the auction will expire.
         /// </summary>
-        [JsonProperty("end")]
+        [JsonPropertyName("end")]
         public long End { get; set; }
 
         /// <summary>
         /// The name of the item that is being auctioned.
         /// </summary>
-        [JsonProperty("item_name")]
+        [JsonPropertyName("item_name")]
         public string? ItemName { get; set; }
 
         /// <summary>
         /// The lore description of the item that is being auctioned.
         /// </summary>
-        [JsonProperty("item_lore")]
+        [JsonPropertyName("item_lore")]
         public string? ItemLore { get; set; }
 
         /// <summary>
         /// Extra lore about the item?
         /// </summary>
-        [JsonProperty("extra")]
+        [JsonPropertyName("extra")]
         public required string Extra { get; set; }
 
         /// <summary>
         /// The list of categories the auctioned item falls in to.
         /// </summary>
-        [JsonProperty("categories")]
+        [JsonPropertyName("categories")]
         public required List<string> Categories { get; set; }
 
         /// <summary>
         /// The category of the auction item.
         /// </summary>
-        [JsonProperty("category")]
+        [JsonPropertyName("category")]
         public required string Category { get; set; }
 
         /// <summary>
         /// The rarity tier of the item.
         /// </summary>
-        [JsonProperty("tier")]
+        [JsonPropertyName("tier")]
         public required string Tier { get; set; }
 
         /// <summary>
         /// The starting amount of coins the auctioneer has placed.
         /// </summary>
-        [JsonProperty("starting_bid")]
+        [JsonPropertyName("starting_bid")]
         public long StartingBid { get; set; }
 
         /// <summary>
         /// The auction item's NBT data.
         /// </summary>
-        [JsonProperty("item_bytes")]
+        [JsonPropertyName("item_bytes")]
         public string? ItemBytes { get; set; }
 
         /// <summary>
         /// Has the auction item been claimed already?
         /// </summary>
-        [JsonProperty("claimed")]
+        [JsonPropertyName("claimed")]
         public bool Claimed { get; set; }
 
         /// <summary>
         /// If the auction item has already been claimed, who claimed it?
         /// Contains a list of player uuid's
         /// </summary>
-        [JsonProperty("claimed_bidders")]
+        [JsonPropertyName("claimed_bidders")]
         public List<string>? ClaimedBidders { get; set; }
 
         /// <summary>
         /// The highest amount of coins that has been bid for the item.
         /// (and probably the current bid amount / how much it was bought for)
         /// </summary>
-        [JsonProperty("highest_bid_amount")]
+        [JsonPropertyName("highest_bid_amount")]
         public long HighestBidAmount { get; set; }
 
         /// <summary>
         /// The UnixTime of the last time the auction was updated.
         /// </summary>
-        [JsonProperty("last_updated")]
+        [JsonPropertyName("last_updated")]
         public long LastUpdated { get; set; }
 
         /// <summary>
         /// Is this auction a BIN (buy it now)?
         /// </summary>
-        [JsonProperty("bin")]
+        [JsonPropertyName("bin")]
         public bool Bin { get; set; }
 
         /// <summary>
         /// The list of bids players have put on the auction.
         /// </summary>
-        [JsonProperty("bids")]
+        [JsonPropertyName("bids")]
         public required List<Bid> Bids { get; set; }
 
         /// <summary>
         /// The uuid of the auction item.
         /// </summary>
-        [JsonProperty("item_uuid")]
+        [JsonPropertyName("item_uuid")]
         public string? ItemUuid { get; set; }
     }
 }

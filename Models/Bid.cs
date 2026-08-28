@@ -1,7 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text.Json.Serialization;
 
 namespace SkyzerSync.Models
 {
@@ -14,27 +11,32 @@ namespace SkyzerSync.Models
         /// <summary>
         /// The uuid of the auction the bid was placed for.
         /// </summary>
-        [JsonProperty("auction_id")]
-        public string AuctionId { get; set; }
+        [JsonPropertyName("auction_id")]
+
+        public string? AuctionId { get; set; }
+
         /// <summary>
         /// The uuid of the bidder who placed the bid.
         /// </summary>
-        [JsonProperty("bidder")]
-        public string Bidder { get; set; }
+        [JsonPropertyName("bidder")]
+        public string? Bidder { get; set; }
+
         /// <summary>
         /// The profile uuid of the bidder who placed the bid.
         /// </summary>
-        [JsonProperty("profile_id")]
-        public string ProfileId { get; set; }
+        [JsonPropertyName("profile_id")]
+        public string? ProfileId { get; set; }
+
         /// <summary>
         /// The amount of coins the bidder placed on the bid.
         /// </summary>
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public long Amount { get; set; }
+
         /// <summary>
         /// The UnixTime the bidder placed the bid.
         /// </summary>
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public long Timestamp { get; set; }
     }
 }

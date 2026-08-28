@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SkyzerSync.Models
 {
@@ -10,32 +10,32 @@ namespace SkyzerSync.Models
         /// <summary>
         /// Whether or not the request was a success.
         /// </summary>
-        [JsonProperty("success")]
+        [JsonPropertyName("success")]
         public bool Success { get; set; }
         /// <summary>
         /// The current page number in the collection of pages.
         /// </summary>
-        [JsonProperty("page")]
+        [JsonPropertyName("page")]
         public int Page { get; set; }
         /// <summary>
         /// The total count of pages available to grab.
         /// </summary>
-        [JsonProperty("totalPages")]
+        [JsonPropertyName("totalPages")]
         public int TotalPages { get; set; }
         /// <summary>
         /// The total number of current auctions available to grab.
         /// </summary>
-        [JsonProperty("totalAuctions")]
+        [JsonPropertyName("totalAuctions")]
         public int TotalAuctions { get; set; }
         /// <summary>
         /// The last time this endpoint was updated.
         /// </summary>
-        [JsonProperty("lastUpdated")]
+        [JsonPropertyName("lastUpdated")]
         public long LastUpdated { get; set; }
         /// <summary>
         /// The list of current auctions.
         /// </summary>
-        [JsonProperty("auctions")]
+        [JsonPropertyName("auctions")]
         public List<Auction>? Auctions { get; set; }
     }
 }
