@@ -99,6 +99,11 @@ namespace SkyzerSync
                             logger.LogError(ex.Message);
                             return; // continue;
                         }
+                        catch (System.TimeoutException ex)
+                        {
+                            logger.LogError(ex.Message + "\nCheck DB connection!");
+                            return; // continue;
+                        }
                     });
 
                     sleepTime = Helper.TimeToWait(firstPage.LastUpdated);

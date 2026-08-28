@@ -15,7 +15,7 @@
         /// <summary>
         /// The delay between updates on the API endpoints in seconds.
         /// </summary>
-        public const double API_ENDPOINT_DELAY = 61;
+        public const double API_ENDPOINT_DELAY = 65;
 
         /// <summary>
         /// The ended auctions API endpoint from Hypixel API.
