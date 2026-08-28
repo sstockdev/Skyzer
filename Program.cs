@@ -1,4 +1,4 @@
-using SkyzerSync;
+using Skyzer.Sync;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<ActiveAuctionsWorker>();

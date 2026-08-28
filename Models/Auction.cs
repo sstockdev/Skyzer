@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System.Text.Json.Serialization;
 
-namespace SkyzerSync.Models
+namespace Skyzer.Sync.Models
 {
     /// <summary>
     /// The model for an auction on Hypixel Skyblock

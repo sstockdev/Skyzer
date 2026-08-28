@@ -1,10 +1,10 @@
 ﻿using MongoDB.Driver;
-using SkyzerSync.Models;
+using Skyzer.Sync.Models;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
-namespace SkyzerSync
+namespace Skyzer.Sync
 {
     public class AuctionsEndedWorker(ILogger<AuctionsEndedWorker> logger) : BackgroundService
     {
@@ -35,7 +35,7 @@ namespace SkyzerSync
                     if (page == null)
                     {
                         logger.LogError("page was null!");
-                        sleepTime = TimeSpan.FromSeconds(2); // if the page is null, wait 1 second before trying again
+                        sleepTime = TimeSpan.FromSeconds(2);
                         continue;
                     }
                     
@@ -66,14 +66,6 @@ namespace SkyzerSync
                             return;
 
                         var auctionsCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Auction>("auctions");
-
-                        // TODO: check if auction already exists in auction collection
-                        // if it doesn't exist you need to create it in the DB with as much information as we can get! possibly using another api call to grab more information
-                        // requires api key: https://api.hypixel.net/#tag/SkyBlock/paths/~1v2~1skyblock~1auction/get
-                        // DONE: update that auction with new information including lastupdated
-                        // NO: if not, upsert auction into collection with null values??
-
-                        // temporary fix, we upsert with empty values and fix later with api key locked call
                         var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, ended_auction.AuctionId);
 
                         var winningBid = new Bid
@@ -103,7 +95,8 @@ namespace SkyzerSync
                         }
                         catch
                         {
-                            // tried to update, if it was unable to find that auction we fail silently. We really only care about auctions that already exist
+                            // tried to update, if it was unable to find that auction we fail silently.
+                            // We really only care about auctions that already exist
                         }
                     });
 
@@ -113,7 +106,7 @@ namespace SkyzerSync
                 catch (HttpRequestException ex)
                 {
                     logger.LogError(ex.Message);
-                    sleepTime = TimeSpan.FromSeconds(2); // if the first page returns an exception, wait 1 second before trying again
+                    sleepTime = TimeSpan.FromSeconds(2);
                     continue;
                 }
 

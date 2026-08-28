@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SkyzerSync.Models
+namespace Skyzer.Sync.Models
 {
     /// <summary>
     /// The model that contains the information
@@ -34,7 +34,7 @@ namespace SkyzerSync.Models
         public long Amount { get; set; }
 
         /// <summary>
-        /// The UnixTime the bidder placed the bid.
+        /// The time at which the bid was created in milliseconds since unix epoch time.
         /// </summary>
         [JsonPropertyName("timestamp")]
         public long Timestamp { get; set; }

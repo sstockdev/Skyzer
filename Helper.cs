@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
-using SkyzerSync.Models;
+using Skyzer.Sync.Models;
 
-namespace SkyzerSync
+namespace Skyzer.Sync
 {
     /// <summary>
     /// Helper class that has shared methods

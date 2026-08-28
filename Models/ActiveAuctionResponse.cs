@@ -1,9 +1,9 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SkyzerSync.Models
+namespace Skyzer.Sync.Models
 {
     /// <summary>
-    /// The model for the response given by Hypixel API. https://api.hypixel.net/#tag/SkyBlock/paths/~1v2~1skyblock~1auctions/get
+    /// The model for the response given by Hypixel API. https://api.hypixel.net/v2/skyblock/auctions
     /// </summary>
     public class ActiveAuctionResponse
     {

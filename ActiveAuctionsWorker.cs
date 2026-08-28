@@ -1,10 +1,10 @@
 using MongoDB.Driver;
-using SkyzerSync.Models;
+using Skyzer.Sync.Models;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
-namespace SkyzerSync
+namespace Skyzer.Sync
 {
     public class ActiveAuctionsWorker(ILogger<ActiveAuctionsWorker> logger) : BackgroundService
     {
@@ -34,7 +34,7 @@ namespace SkyzerSync
                     if (firstPage == null || firstPage.Auctions == null)
                     {
                         logger.LogError("firstPage or firstPage auctions were was null!");
-                        sleepTime = TimeSpan.FromSeconds(2); // if the first page is null, wait 1 second before trying again
+                        sleepTime = TimeSpan.FromSeconds(2);
                         continue;
                     }
 
@@ -111,7 +111,7 @@ namespace SkyzerSync
                 catch (HttpRequestException ex)
                 {
                     logger.LogError(ex.Message);
-                    sleepTime = TimeSpan.FromSeconds(2); // if the first page returns an exception, wait 1 second before trying again
+                    sleepTime = TimeSpan.FromSeconds(2);
                     continue;
                 }
 
