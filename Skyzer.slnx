@@ -1,3 +1,4 @@
 <Solution>
-  <Project Path="Skyzer.Sync.csproj" />
+  <Project Path="Skyzer.Api/Skyzer.Api.csproj" Id="192e15bd-bcfb-4b3d-9cbc-bfeee45dc142" />
+  <Project Path="Skyzer.Sync/Skyzer.Sync.csproj" />
 </Solution>
