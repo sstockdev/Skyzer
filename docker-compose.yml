@@ -25,3 +25,17 @@ services:
     environment:
       ConnectionStrings__MongoDB: mongodb://db:27017
     restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./Skyzer.Dashboard
+      dockerfile: Dockerfile
+    container_name: skyzer-dashboard
+    ports:
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__MongoDB: mongodb://db:27017
+    restart: unless-stopped
