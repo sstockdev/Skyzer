@@ -1,11 +1,11 @@
 services:
   db:
-    image: mongo:7
+    image: mongodb/mongodb-community-server:latest
     container_name: skyzer-db
     ports:
       - 27017:27017
     volumes:
-      - ./data/mongo:/data/db
+      - ./data/db:/data/db
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
