@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-Skyzer-abde7802-e3bc-4e57-b9ee-7307eaa4a1ba</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>.</DockerfileContext>
+	<DockerfileContext>..</DockerfileContext>
   </PropertyGroup>
 
   <ItemGroup>

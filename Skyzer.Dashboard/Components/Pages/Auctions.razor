@@ -1,21 +1,75 @@
-﻿@page "/counter"
+﻿@page "/auctions"
+@using Skyzer.Dashboard.Services
+@using Skyzer.Shared.Models
+@using Skyzer.Shared
 @rendermode InteractiveServer
+@inject AuctionService AuctionService
 
 <PageTitle>Auctions</PageTitle>
 
 <h1>Auctions</h1>
 
-<h1>WIP</h1>
-
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+@if (auctions is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Last Updated</th>
+                <th>Price</th>
+                <th>Live?</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in auctions)
+            {
+                <tr>
+                    <td>
+                        @if (a.ItemName != null)
+                        {
+                            @a.ItemName
+                        }
+                        else
+                        {
+                            @a.Extra
+                        }
+                    </td>
+                    <td>
+                        @PrettifyLastUpdatedUTC(a.LastUpdated) ago
+                    </td>
+                    <td>
+                        @a.StartingBid.ToString("C")
+                    </td>
+                    <td>
+                        @IsAuctionLive(a)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
-    private int currentCount = 0;
+    private List<Auction>? auctions;
 
-    private void IncrementCount()
+    protected override async Task OnInitializedAsync()
     {
-        currentCount++;
+        auctions = await AuctionService.GetAllAsync();
+    }
+
+    private string PrettifyLastUpdatedUTC(long lastUpdatedUTC)
+    {
+        DateTime lastUpdatedDateTime = TimeHelper.UnixEpochToUTCDateTime(lastUpdatedUTC);
+        TimeSpan diff = lastUpdatedDateTime - DateTime.UtcNow;
+        return TimeHelper.ToPrettyFormat(-diff);
+    }
+
+    private bool IsAuctionLive(Auction auction)
+    {
+        return !auction.Claimed && (@TimeHelper.UnixEpochToUTCDateTime(auction.End) - @DateTime.UtcNow > TimeSpan.Zero);
     }
 }

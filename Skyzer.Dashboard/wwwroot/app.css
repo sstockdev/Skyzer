@@ -1,5 +1,10 @@
+@font-face {
+    font-family: 'Mojang';
+    src: url('font/Mojang-Regular.ttf') format('truetype');
+}
+
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Mojang';
 }
 
 a, .btn-link {

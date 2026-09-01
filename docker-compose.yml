@@ -16,8 +16,8 @@ services:
 
   sync:
     build:
-      context: ./Skyzer.Sync
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Skyzer.Sync/Dockerfile
     container_name: skyzer-sync
     depends_on:
       db:
@@ -28,8 +28,8 @@ services:
 
   dashboard:
     build:
-      context: ./Skyzer.Dashboard
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Skyzer.Dashboard/Dockerfile
     container_name: skyzer-dashboard
     ports:
       - 8080:8080

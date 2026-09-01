@@ -12,16 +12,20 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Skyzer.Dashboard.csproj", "."]
-RUN dotnet restore "./Skyzer.Dashboard.csproj"
+
+# Copy project and reference project
+COPY ["Skyzer.Dashboard/Skyzer.Dashboard.csproj", "Skyzer.Dashboard/"]
+COPY ["Skyzer.Shared/Skyzer.Shared.csproj", "Skyzer.Shared/"]
+RUN dotnet restore "Skyzer.Dashboard/Skyzer.Dashboard.csproj"
+
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "./Skyzer.Dashboard.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/Skyzer.Dashboard"
+RUN dotnet build "Skyzer.Dashboard.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Skyzer.Dashboard.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Skyzer.Dashboard.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
