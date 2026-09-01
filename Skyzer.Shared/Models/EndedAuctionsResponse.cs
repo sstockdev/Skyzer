@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Skyzer.Sync.Models
+namespace Skyzer.Shared.Models
 {
     /// <summary>
     /// The model for the response returned from Hypixel API endpoint https://api.hypixel.net/v2/skyblock/auctions_ended

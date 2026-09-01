@@ -15,4 +15,8 @@
     <PackageReference Include="MongoDB.Driver" Version="3.11.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Skyzer.Shared\Skyzer.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

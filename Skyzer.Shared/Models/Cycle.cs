@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace Skyzer.Sync.Models
+namespace Skyzer.Shared.Models
 {
     /// <summary>
     /// The model of a cycle. A cycle is a sync run.

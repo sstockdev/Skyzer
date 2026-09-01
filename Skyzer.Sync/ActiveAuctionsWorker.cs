@@ -1,5 +1,5 @@
 using MongoDB.Driver;
-using Skyzer.Sync.Models;
+using Skyzer.Shared.Models;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;

@@ -1,5 +1,5 @@
 ﻿using MongoDB.Driver;
-using Skyzer.Sync.Models;
+using Skyzer.Shared.Models;
 
 namespace Skyzer.Sync
 {

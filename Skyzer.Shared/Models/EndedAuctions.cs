@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Skyzer.Sync.Models
+namespace Skyzer.Shared.Models
 {
     /// <summary>
     /// The model for the auction object returned by the Hypixel API endpoint

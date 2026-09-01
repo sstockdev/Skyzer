@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Skyzer.Sync.Models
+namespace Skyzer.Shared.Models
 {
     /// <summary>
     /// The model that contains the information
