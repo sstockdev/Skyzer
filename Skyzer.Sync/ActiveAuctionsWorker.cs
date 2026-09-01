@@ -6,7 +6,7 @@ using System.Net.Http.Json;
 
 namespace Skyzer.Sync
 {
-    public class ActiveAuctionsWorker(ILogger<ActiveAuctionsWorker> logger) : BackgroundService
+    public class ActiveAuctionsWorker(ILogger<ActiveAuctionsWorker> logger, IMongoDatabase database) : BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -14,7 +14,7 @@ namespace Skyzer.Sync
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            var cyclesCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Cycle>("active_auctions_cycles");
+            var cyclesCollection = database.GetCollection<Cycle>("active_auctions_cycles");
             TimeSpan sleepTime = new();
 
             while (!stoppingToken.IsCancellationRequested)
@@ -53,7 +53,7 @@ namespace Skyzer.Sync
 
                     await Parallel.ForEachAsync(firstPage.Auctions, async (auction, stoppingToken) =>
                     {
-                        var auctionsCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Auction>("auctions");
+                        var auctionsCollection = database.GetCollection<Auction>("auctions");
 
                         // we don't care about non buy it now auctions
                         if (!auction.Bin)
@@ -69,7 +69,7 @@ namespace Skyzer.Sync
 
                     await Parallel.ForAsync(firstPage.Page + 1, firstPage.TotalPages, async (i, stoppingToken) =>
                     {
-                        var auctionsCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Auction>("auctions");
+                        var auctionsCollection = database.GetCollection<Auction>("auctions");
 
                         try
                         {

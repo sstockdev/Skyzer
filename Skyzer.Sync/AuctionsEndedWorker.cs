@@ -6,7 +6,7 @@ using System.Net.Http.Json;
 
 namespace Skyzer.Sync
 {
-    public class AuctionsEndedWorker(ILogger<AuctionsEndedWorker> logger) : BackgroundService
+    public class AuctionsEndedWorker(ILogger<AuctionsEndedWorker> logger, IMongoDatabase database) : BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -14,7 +14,7 @@ namespace Skyzer.Sync
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            var endedCyclesCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Cycle>("ended_auctions_cycles");
+            var endedCyclesCollection = database.GetCollection<Cycle>("ended_auctions_cycles");
             TimeSpan sleepTime = new();
 
             while (!stoppingToken.IsCancellationRequested)
@@ -65,7 +65,7 @@ namespace Skyzer.Sync
                         if (!ended_auction.Bin)
                             return;
 
-                        var auctionsCollection = new MongoClient("mongodb://localhost:27018").GetDatabase("skyblock").GetCollection<Auction>("auctions");
+                        var auctionsCollection = database.GetCollection<Auction>("auctions");
                         var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, ended_auction.AuctionId);
 
                         var winningBid = new Bid

@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mongo:7
+    container_name: skyzer-db
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/mongo:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  sync:
+    build:
+      context: ./Skyzer.Sync
+      dockerfile: Dockerfile
+    container_name: skyzer-sync
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__MongoDB: mongodb://db:27017
+    restart: unless-stopped

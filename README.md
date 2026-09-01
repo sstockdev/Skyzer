@@ -4,4 +4,4 @@ Skyzer was created with the goal of utilizing machine learning algorithms to pre
 
 For this to work we need data to train with, that is where `Skyzer.Sync` comes in. This worker reads the available data from Hypixel's public API, aggregates that data, and stores it in a MongoDB database.
 
-Once we have data, we need to read that data. That is where `Skyzer.Api` comes in. `Skyzer.Api` is an ASP .NET MVC project that was created with the goal of facilitating CRUD operations on the MongoDB database containing auction information and also as a way to run certain operations on that data.
+Once we have data, we want to visualize that data. That is where `Skyzer.Dashboard` comes in. `Skyzer.Dashboard` is a .NET Blazor project that was created with the goal of visualizing the MongoDB database.
