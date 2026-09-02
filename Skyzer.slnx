@@ -4,5 +4,6 @@
   </Folder>
   <Project Path="Skyzer.Dashboard/Skyzer.Dashboard.csproj" Id="882b41a3-953f-4abb-8cb0-cfcbc4207026" />
   <Project Path="Skyzer.Shared/Skyzer.Shared.csproj" Id="60ee0ca2-d8de-47b0-a128-a3d7a8a2184c" />
+  <Project Path="Skyzer.Sniper/Skyzer.Sniper.csproj" Id="6dcba70a-de8d-4fdc-8456-951c851955a1" />
   <Project Path="Skyzer.Sync/Skyzer.Sync.csproj" />
 </Solution>
