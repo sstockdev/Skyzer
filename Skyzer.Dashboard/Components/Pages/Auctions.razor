@@ -2,74 +2,110 @@
 @using Skyzer.Dashboard.Services
 @using Skyzer.Shared.Models
 @using Skyzer.Shared
+@using Microsoft.AspNetCore.Components.Web.Virtualization
 @rendermode InteractiveServer
 @inject AuctionService AuctionService
 
 <PageTitle>Auctions</PageTitle>
 
 <h1>Auctions</h1>
-
-@if (auctions is null)
-{
-    <p>Loading...</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Item Name</th>
-                <th>Last Updated</th>
-                <th>Price</th>
-                <th>Live?</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var a in auctions)
-            {
+<table class="table">
+    <thead>
+        <tr>
+            <th>Item Name</th>
+            <th>Last Updated</th>
+            <th>Price</th>
+            <th>Is Live?</th>
+        </tr>
+    </thead>
+    <tbody>
+        <Virtualize ItemsProvider="LoadAuctions"
+                    ItemSize="48"
+                    OverscanCount="10">
+            <ItemContent Context="auction">
                 <tr>
                     <td>
-                        @if (a.ItemName != null)
-                        {
-                            @a.ItemName
-                        }
-                        else
-                        {
-                            @a.Extra
-                        }
+                        @(auction.ItemName ?? auction.Extra)
                     </td>
                     <td>
-                        @PrettifyLastUpdatedUTC(a.LastUpdated) ago
+                        @PrettifyLastUpdatedUTC(auction.LastUpdated) ago
                     </td>
                     <td>
-                        @a.StartingBid.ToString("C")
+                        @auction.StartingBid.ToString("C")
                     </td>
                     <td>
-                        @IsAuctionLive(a)
+                        @IsAuctionLive(auction)
                     </td>
                 </tr>
-            }
-        </tbody>
-    </table>
-}
+            </ItemContent>
 
+            <Placeholder>
+                <p>Loading...</p>
+            </Placeholder>
+
+            <EmptyContent>
+                <p>No auctions found.</p>
+            </EmptyContent>
+        </Virtualize>
+    </tbody>
+</table>
 @code {
-    private List<Auction>? auctions;
+    private const int PageSize = 100;
+    private readonly Dictionary<int, IReadOnlyList<Auction>> pageCache = [];
+    private int totalAuctionCount;
 
-    protected override async Task OnInitializedAsync()
+    private async ValueTask<ItemsProviderResult<Auction>> LoadAuctions(ItemsProviderRequest request)
     {
-        auctions = await AuctionService.GetAllAsync();
+        if (request.Count == 0)
+        {
+            return new ItemsProviderResult<Auction>([], totalAuctionCount);
+        }
+
+        var firstPage = request.StartIndex / PageSize;
+        var lastPage = (request.StartIndex + request.Count - 1) / PageSize;
+
+        for (var page = firstPage; page <= lastPage; page++)
+        {
+            if (pageCache.ContainsKey(page))
+            {
+                continue;
+            }
+
+            var result = await AuctionService.GetPageAsync(
+                page,
+                PageSize,
+                request.CancellationToken
+            );
+
+            pageCache[page] = result.Items;
+            totalAuctionCount = result.TotalCount;
+        }
+
+        var items = new List<Auction>(request.Count);
+
+        for (var index = request.StartIndex; index < request.StartIndex + request.Count; index++)
+        {
+            var page = index / PageSize;
+            var indexWithinPage = index % PageSize;
+
+            if (pageCache.TryGetValue(page, out var pageItems) && indexWithinPage < pageItems.Count)
+            {
+                items.Add(pageItems[indexWithinPage]);
+            }
+        }
+
+        return new ItemsProviderResult<Auction>(items, totalAuctionCount);
     }
 
     private string PrettifyLastUpdatedUTC(long lastUpdatedUTC)
     {
-        DateTime lastUpdatedDateTime = TimeHelper.UnixEpochToUTCDateTime(lastUpdatedUTC);
-        TimeSpan diff = lastUpdatedDateTime - DateTime.UtcNow;
+        var lastUpdatedDateTime = TimeHelper.UnixEpochToUTCDateTime(lastUpdatedUTC);
+        var diff = lastUpdatedDateTime - DateTime.UtcNow;
         return TimeHelper.ToPrettyFormat(-diff);
     }
 
     private bool IsAuctionLive(Auction auction)
     {
-        return !auction.Claimed && (@TimeHelper.UnixEpochToUTCDateTime(auction.End) - @DateTime.UtcNow > TimeSpan.Zero);
+        return !auction.Claimed && TimeHelper.UnixEpochToUTCDateTime(auction.End) - DateTime.UtcNow > TimeSpan.Zero;
     }
 }

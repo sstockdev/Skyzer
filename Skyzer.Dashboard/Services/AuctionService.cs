@@ -7,7 +7,28 @@ namespace Skyzer.Dashboard.Services
     {
         private readonly IMongoCollection<Auction> _auctions = database.GetCollection<Auction>("auctions");
 
-        public async Task<List<Auction>> GetAllAsync() =>
-            await _auctions.Find(_ => true).ToListAsync();
+        public async Task<AuctionPage> GetPageAsync(
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var totalCount = await _auctions.CountDocumentsAsync(
+                FilterDefinition<Auction>.Empty,
+                cancellationToken: cancellationToken);
+
+            var auctions = await _auctions
+                .Find(FilterDefinition<Auction>.Empty)
+                .SortByDescending(auction => auction.LastUpdated)
+                .ThenBy(auction => auction.Uuid)
+                .Skip(page * pageSize)
+                .Limit(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return new AuctionPage(auctions, (int)totalCount);
+        }
     }
+
+    public sealed record AuctionPage(
+        IReadOnlyList<Auction> Items,
+        int TotalCount);
 }
