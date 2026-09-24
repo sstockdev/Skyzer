@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace Skyzer.Shared.Models
 {
@@ -11,6 +12,7 @@ namespace Skyzer.Shared.Models
         /// <summary>
         /// The unique UUID for the auction object.
         /// </summary>
+        [BsonId]
         [JsonPropertyName("auction_id")]
         public string? AuctionId { get; set; }
 
