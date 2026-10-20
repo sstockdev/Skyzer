@@ -183,9 +183,30 @@ namespace Skyzer.Sniper
                 await snipes.BulkWriteAsync(writes, cancellationToken: stoppingToken);
             }
 
-            // Drop opportunities whose auctions have since expired.
-            await snipes.DeleteManyAsync(
-                Builders<Snipe>.Filter.Lte(s => s.End, now), stoppingToken);
+            // Drop opportunities that are no longer purchasable: bought (claimed),
+            // expired, or gone from the auctions collection entirely.
+            var snipeUuids = await snipes
+                .Find(FilterDefinition<Snipe>.Empty)
+                .Project(s => s.Uuid)
+                .ToListAsync(stoppingToken);
+
+            if (snipeUuids.Count > 0)
+            {
+                var stillBuyable = await auctions
+                    .Find(Builders<Auction>.Filter.And(
+                        Builders<Auction>.Filter.In(a => a.Uuid, snipeUuids),
+                        Builders<Auction>.Filter.Eq(a => a.Claimed, false),
+                        Builders<Auction>.Filter.Gt(a => a.End, now)))
+                    .Project(a => a.Uuid)
+                    .ToListAsync(stoppingToken);
+
+                var stale = snipeUuids.Except(stillBuyable).ToList();
+                if (stale.Count > 0)
+                {
+                    await snipes.DeleteManyAsync(
+                        Builders<Snipe>.Filter.In(s => s.Uuid, stale), stoppingToken);
+                }
+            }
 
             return detected.Count;
         }
