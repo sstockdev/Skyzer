@@ -31,7 +31,7 @@
                         @PrettifyLastUpdatedUTC(auction.LastUpdated) ago
                     </td>
                     <td>
-                        @auction.StartingBid.ToString("C")
+                        @auction.StartingBid.ToCoinFormat()
                     </td>
                     <td>
                         @IsAuctionLive(auction)
@@ -99,13 +99,13 @@
 
     private string PrettifyLastUpdatedUTC(long lastUpdatedUTC)
     {
-        var lastUpdatedDateTime = TimeHelper.UnixEpochToUTCDateTime(lastUpdatedUTC);
+        var lastUpdatedDateTime = Helper.UnixEpochToUTCDateTime(lastUpdatedUTC);
         var diff = lastUpdatedDateTime - DateTime.UtcNow;
-        return TimeHelper.ToPrettyFormat(-diff);
+        return Helper.ToPrettyFormat(-diff);
     }
 
     private bool IsAuctionLive(Auction auction)
     {
-        return !auction.Claimed && TimeHelper.UnixEpochToUTCDateTime(auction.End) - DateTime.UtcNow > TimeSpan.Zero;
+        return !auction.Claimed && Helper.UnixEpochToUTCDateTime(auction.End) - DateTime.UtcNow > TimeSpan.Zero;
     }
 }

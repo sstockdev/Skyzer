@@ -47,7 +47,7 @@ else
             return "n/a";
         }
 
-        var age = DateTime.UtcNow - TimeHelper.UnixEpochToUTCDateTime(stats.NewestUpdate);
-        return TimeHelper.ToPrettyFormat(age) + " ago";
+        var age = DateTime.UtcNow - Helper.UnixEpochToUTCDateTime(stats.NewestUpdate);
+        return Helper.ToPrettyFormat(age) + " ago";
     }
 }

@@ -1,8 +1,9 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 namespace Skyzer.Shared
 {
-    public static class TimeHelper
+    public static class Helper
     {
         /// <summary>
         /// Helper method that takes in milliseconds since unix epoch and returns the associated
@@ -33,5 +34,26 @@ namespace Skyzer.Shared
 
         }
 
+        /// <summary>
+        /// Helper method to format coins. ie: 4,000,000 -> 4M
+        /// </summary>
+        /// <param name="coins">Unformatted long</param>
+        /// <returns>Formatted long</returns>
+        public static string ToCoinFormat(this long coins)
+        {
+            string[] suffixes = ["", "K", "M", "B", "T"];
+
+            string sign = coins < 0 ? "-" : "";
+            double value = Math.Abs((double)coins);
+            int suffixIndex = 0;
+
+            while (Math.Round(value, 1, MidpointRounding.AwayFromZero) >= 1000 && suffixIndex < suffixes.Length - 1)
+            {
+                value /= 1000;
+                suffixIndex++;
+            }
+
+            return sign + value.ToString("0.#", CultureInfo.InvariantCulture) + suffixes[suffixIndex];
+        }
     }
 }

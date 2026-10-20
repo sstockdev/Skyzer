@@ -37,9 +37,9 @@ else
                 <tr>
                     <td>@(snipe.ItemName ?? "?")</td>
                     <td>@snipe.Tier</td>
-                    <td>@snipe.ListedPrice.ToString("N0")</td>
-                    <td>@snipe.ReferencePrice.ToString("N0")</td>
-                    <td>@snipe.EstimatedProfit.ToString("N0")</td>
+                    <td>@snipe.ListedPrice.ToCoinFormat()</td>
+                    <td>@snipe.ReferencePrice.ToCoinFormat()</td>
+                    <td>@snipe.EstimatedProfit.ToCoinFormat()</td>
                     <td>@snipe.SampleCount</td>
                     <td>@Expires(snipe.End)</td>
                 </tr>
@@ -58,7 +58,7 @@ else
 
     private string Expires(long end)
     {
-        var diff = TimeHelper.UnixEpochToUTCDateTime(end) - DateTime.UtcNow;
-        return diff > TimeSpan.Zero ? "in " + TimeHelper.ToPrettyFormat(diff) : "expired";
+        var diff = Helper.UnixEpochToUTCDateTime(end) - DateTime.UtcNow;
+        return diff > TimeSpan.Zero ? "in " + Helper.ToPrettyFormat(diff) : "expired";
     }
 }

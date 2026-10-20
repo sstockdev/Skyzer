@@ -138,5 +138,24 @@ namespace Skyzer.Shared.Models
         /// </summary>
         [JsonPropertyName("item_uuid")]
         public string? ItemUuid { get; set; }
+
+        /// <summary>
+        /// The cycle (milliseconds since unix epoch) in which Skyzer.Sync first saw the auction.
+        /// Not provided by Hypixel API.
+        /// </summary>
+        [JsonIgnore]
+        [BsonIgnoreIfNull]
+        public long? FirstSeen { get; set; }
+
+        /// <summary>
+        /// The most recent cycle (milliseconds since unix epoch) in which Skyzer.Sync saw the auction
+        /// in the active auctions listing. Not provided by Hypixel API.
+        /// Once an auction stops being seen, its outcome can be derived:
+        /// sold if <see cref="Claimed"/>, expired unsold if <see cref="End"/> was reached around
+        /// <see cref="LastSeen"/>, or cancelled if <see cref="End"/> is still in the future.
+        /// </summary>
+        [JsonIgnore]
+        [BsonIgnoreIfNull]
+        public long? LastSeen { get; set; }
     }
 }

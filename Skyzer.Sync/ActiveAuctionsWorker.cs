@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Skyzer.Shared.Models;
 using System.Diagnostics;
@@ -15,6 +16,7 @@ namespace Skyzer.Sync
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             var cyclesCollection = database.GetCollection<Cycle>("active_auctions_cycles");
+            var auctionsCollection = database.GetCollection<Auction>("auctions");
             TimeSpan sleepTime = new();
 
             while (!stoppingToken.IsCancellationRequested)
@@ -48,29 +50,13 @@ namespace Skyzer.Sync
                         sleepTime = Helper.TimeToWait(firstPage.LastUpdated).Add(TimeSpan.FromSeconds(2)) ;
                         continue;
                     }
-                    else
-                        await Helper.ProcessCycle(cyclesCollection, firstPage.LastUpdated, stoppingToken);
 
-                    await Parallel.ForEachAsync(firstPage.Auctions, async (auction, stoppingToken) =>
-                    {
-                        var auctionsCollection = database.GetCollection<Auction>("auctions");
+                    var cycle = firstPage.LastUpdated;
 
-                        // we don't care about non buy it now auctions
-                        if (!auction.Bin)
-                            return;
-
-                        // filter to the auction by uuid
-                        var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, auction.Uuid);
-
-                        // this took me way too long to figure out: but you can call replace with isUpsert and it will create the document
-                        // if it doesn't already exist.
-                        await auctionsCollection.ReplaceOneAsync(filter, auction, new ReplaceOptions { IsUpsert = true }, stoppingToken);
-                    });
+                    await UpsertPageAsync(auctionsCollection, firstPage.Auctions, cycle, stoppingToken);
 
                     await Parallel.ForAsync(firstPage.Page + 1, firstPage.TotalPages, async (i, stoppingToken) =>
                     {
-                        var auctionsCollection = database.GetCollection<Auction>("auctions");
-
                         try
                         {
                             var page = await client.GetFromJsonAsync<ActiveAuctionResponse>(Constants.ACTIVE_AUCTIONS_URL + $"?page={i}", stoppingToken);
@@ -80,19 +66,7 @@ namespace Skyzer.Sync
                                 return; // continue; equivalent for Parallel.ForAsync
                             }
 
-                            await Parallel.ForEachAsync(page.Auctions, async (auction, stoppingToken) =>
-                            {
-
-                                if (!auction.Bin)
-                                    return;
-
-                                // filter to the auction by uuid
-                                var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, auction.Uuid);
-
-                                // this took me way too long to figure out: but you can call replace with isUpsert and it will create the document
-                                // if it doesn't already exist.
-                                await auctionsCollection.ReplaceOneAsync(filter, auction, new ReplaceOptions { IsUpsert = true }, stoppingToken);
-                            });
+                            await UpsertPageAsync(auctionsCollection, page.Auctions, cycle, stoppingToken);
                         }
                         catch (HttpRequestException ex)
                         {
@@ -106,6 +80,10 @@ namespace Skyzer.Sync
                         }
                     });
 
+                    // only mark the cycle as processed once its pages are written, so a crash mid-cycle
+                    // gets retried. The upserts are idempotent so retrying is safe.
+                    await Helper.ProcessCycle(cyclesCollection, cycle, stoppingToken);
+
                     sleepTime = Helper.TimeToWait(firstPage.LastUpdated);
                 }
                 catch (HttpRequestException ex)
@@ -118,6 +96,48 @@ namespace Skyzer.Sync
                 stopwatch.Stop();
                 logger.LogInformation("Took {Elapsed} seconds to sync cycle.", stopwatch.Elapsed.TotalSeconds);
             }
+        }
+
+        /// <summary>
+        /// Upserts a page of auctions in a single bulk write. Only BIN auctions are stored.
+        /// Sets <see cref="Auction.LastSeen"/> to the cycle every time, and <see cref="Auction.FirstSeen"/>
+        /// only when the auction is inserted for the first time.
+        /// </summary>
+        /// <param name="auctionsCollection">The mongodb auctions collection.</param>
+        /// <param name="auctions">The auctions from a page of the active auctions API response.</param>
+        /// <param name="cycle">The LastUpdatedTime of the active auction page's response.</param>
+        private static async Task UpsertPageAsync(IMongoCollection<Auction> auctionsCollection, IEnumerable<Auction> auctions, long cycle, CancellationToken stoppingToken)
+        {
+            var models = new List<WriteModel<Auction>>();
+
+            foreach (var auction in auctions)
+            {
+                // we don't care about non buy it now auctions
+                if (!auction.Bin)
+                    continue;
+
+                var fields = auction.ToBsonDocument();
+                fields.Remove("_id");
+                fields.Remove(nameof(Auction.FirstSeen));
+                fields.Remove(nameof(Auction.LastSeen));
+                fields[nameof(Auction.LastSeen)] = cycle;
+
+                // FirstSeen must not also be in $set, otherwise mongo rejects the update with a conflicting path error
+                var update = new BsonDocument
+                {
+                    { "$set", fields },
+                    { "$setOnInsert", new BsonDocument(nameof(Auction.FirstSeen), cycle) }
+                };
+
+                var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, auction.Uuid);
+                models.Add(new UpdateOneModel<Auction>(filter, update) { IsUpsert = true });
+            }
+
+            // BulkWriteAsync throws when given no models
+            if (models.Count == 0)
+                return;
+
+            await auctionsCollection.BulkWriteAsync(models, new BulkWriteOptions { IsOrdered = false }, stoppingToken);
         }
     }
 }
