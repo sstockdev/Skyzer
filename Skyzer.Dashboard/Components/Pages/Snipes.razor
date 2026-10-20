@@ -1,0 +1,64 @@
+@page "/snipes"
+@using Skyzer.Dashboard.Services
+@using Skyzer.Shared.Models
+@using Skyzer.Shared
+@inject SnipeService SnipeService
+
+<PageTitle>Snipes</PageTitle>
+
+<h1>Snipes</h1>
+<p>Live BIN listings priced below market, sorted by estimated profit.</p>
+
+@if (snipes is null)
+{
+    <p>Loading...</p>
+}
+else if (snipes.Count == 0)
+{
+    <p>No snipes found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Tier</th>
+                <th>Listed</th>
+                <th>Market</th>
+                <th>Est. Profit</th>
+                <th>Samples</th>
+                <th>Expires</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var snipe in snipes)
+            {
+                <tr>
+                    <td>@(snipe.ItemName ?? "?")</td>
+                    <td>@snipe.Tier</td>
+                    <td>@snipe.ListedPrice.ToString("N0")</td>
+                    <td>@snipe.ReferencePrice.ToString("N0")</td>
+                    <td>@snipe.EstimatedProfit.ToString("N0")</td>
+                    <td>@snipe.SampleCount</td>
+                    <td>@Expires(snipe.End)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<Snipe>? snipes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        snipes = await SnipeService.GetTopSnipesAsync(100);
+    }
+
+    private string Expires(long end)
+    {
+        var diff = TimeHelper.UnixEpochToUTCDateTime(end) - DateTime.UtcNow;
+        return diff > TimeSpan.Zero ? "in " + TimeHelper.ToPrettyFormat(diff) : "expired";
+    }
+}

@@ -17,7 +17,7 @@ namespace Skyzer.Sync
         public static async Task<bool> IsCycleProcessed(IMongoCollection<Cycle> cyclesCollection, long cycle, CancellationToken stoppingToken)
         {
             var filter = Builders<Cycle>.Filter.Eq(c => c.Id, cycle);
-            var result = await cyclesCollection.Find(filter).FirstOrDefaultAsync();
+            var result = await cyclesCollection.Find(filter).FirstOrDefaultAsync(stoppingToken);
             return result != null;
         }
 

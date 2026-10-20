@@ -1,6 +1,6 @@
 using Skyzer.Dashboard.Components;
-using MongoDB.Driver;
 using Skyzer.Dashboard.Services;
+using Skyzer.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,12 +9,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add MongoDB
-builder.Services.AddSingleton<IMongoClient>(
-    new MongoClient(builder.Configuration.GetConnectionString("MongoDB")));
-builder.Services.AddSingleton<IMongoDatabase>(
-    sp => sp.GetRequiredService<IMongoClient>().GetDatabase("skyblock"));
+builder.Services.AddSkyzerMongo(builder.Configuration);
 
 builder.Services.AddScoped<AuctionService>();
+builder.Services.AddScoped<SnipeService>();
+builder.Services.AddScoped<OverviewService>();
 
 var app = builder.Build();
 

@@ -26,6 +26,18 @@ services:
       ConnectionStrings__MongoDB: mongodb://db:27017
     restart: unless-stopped
 
+  sniper:
+    build:
+      context: .
+      dockerfile: Skyzer.Sniper/Dockerfile
+    container_name: skyzer-sniper
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__MongoDB: mongodb://db:27017
+    restart: unless-stopped
+
   dashboard:
     build:
       context: .

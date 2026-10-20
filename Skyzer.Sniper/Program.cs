@@ -1,12 +1,12 @@
-using MongoDB.Driver;
+using Skyzer.Shared;
 using Skyzer.Sniper;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddSingleton<IMongoClient>(
-    new MongoClient(builder.Configuration.GetConnectionString("MongoDB")));
-builder.Services.AddSingleton<IMongoDatabase>(
-    sp => sp.GetRequiredService<IMongoClient>().GetDatabase("skyblock"));
+builder.Services.AddSkyzerMongo(builder.Configuration);
+
+builder.Services.Configure<SniperOptions>(
+    builder.Configuration.GetSection(SniperOptions.SectionName));
 
 builder.Services.AddHostedService<Worker>();
 

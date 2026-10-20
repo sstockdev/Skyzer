@@ -1,7 +1,53 @@
 ﻿@page "/"
+@using Skyzer.Dashboard.Services
+@using Skyzer.Shared
+@inject OverviewService OverviewService
 
 <PageTitle>Overview</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Overview</h1>
 
-There will be a bunch of statistics that live on this page.
+@if (stats is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="row g-3">
+        @StatCard("Total auctions", stats.TotalAuctions.ToString("N0"))
+        @StatCard("Live auctions", stats.LiveAuctions.ToString("N0"))
+        @StatCard("Sold (24h)", stats.SoldLast24h.ToString("N0"))
+        @StatCard("Active snipes", stats.ActiveSnipes.ToString("N0"))
+        @StatCard("Priced item keys", stats.MarketPriceKeys.ToString("N0"))
+        @StatCard("Data freshness", Freshness())
+    </div>
+}
+
+@code {
+    private OverviewStats? stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        stats = await OverviewService.GetStatsAsync();
+    }
+
+    private RenderFragment StatCard(string label, string value) =>@<div class="col-sm-6 col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">@label</h6>
+                <p class="card-text fs-4 mb-0">@value</p>
+            </div>
+        </div>
+    </div>;
+
+    private string Freshness()
+    {
+        if (stats is null || stats.NewestUpdate == 0)
+        {
+            return "n/a";
+        }
+
+        var age = DateTime.UtcNow - TimeHelper.UnixEpochToUTCDateTime(stats.NewestUpdate);
+        return TimeHelper.ToPrettyFormat(age) + " ago";
+    }
+}

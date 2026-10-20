@@ -12,8 +12,8 @@ namespace Skyzer.Dashboard.Services
             int pageSize,
             CancellationToken cancellationToken = default)
         {
-            var totalCount = await _auctions.CountDocumentsAsync(
-                FilterDefinition<Auction>.Empty,
+            // Collection-level estimate from metadata; avoids a full scan on every page request.
+            var totalCount = await _auctions.EstimatedDocumentCountAsync(
                 cancellationToken: cancellationToken);
 
             var auctions = await _auctions
