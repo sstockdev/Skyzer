@@ -113,6 +113,23 @@ namespace Skyzer.Sync.Tests
         }
 
         [Theory]
+        [InlineData("5")]
+        [InlineData("[1]")]
+        [InlineData("null")]
+        [InlineData("{\"type\":\"ENDER_DRAGON\",\"candyUsed\":1.5}")]
+        [InlineData("{\"type\":\"ENDER_DRAGON\",\"candyUsed\":99999999999}")]
+        public void Decode_PetWithUnexpectedPetInfoShape_KeepsRestOfItem(string petInfo)
+        {
+            var bytes = Encode(Item("PET", extra: e => e.Add(new NbtString("petInfo", petInfo))));
+
+            var item = ItemDecoder.Decode(bytes);
+
+            Assert.Null(item.DecodeError);
+            Assert.Equal("PET", item.SkyblockId);
+            Assert.NotNull(item.Nbt);
+        }
+
+        [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData("not base64!!")]

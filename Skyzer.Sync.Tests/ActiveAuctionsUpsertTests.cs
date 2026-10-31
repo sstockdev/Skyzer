@@ -31,7 +31,7 @@ namespace Skyzer.Sync.Tests
         {
             var bytes = Encode(Item("HYPERION"));
 
-            var update = Render(ActiveAuctionsWorker.BuildUpsert(NewAuction(bytes), 123));
+            var update = Render(ActiveAuctionsWorker.BuildUpsert(NewAuction(bytes), 123, isNew: true));
 
             var set = update["$set"].AsBsonDocument;
             Assert.False(set.Contains("ItemBytes"));
@@ -48,12 +48,31 @@ namespace Skyzer.Sync.Tests
         [Fact]
         public void BuildUpsert_DecodeFailure_StillUpserts()
         {
-            var model = ActiveAuctionsWorker.BuildUpsert(NewAuction("garbage"), 123);
+            var model = ActiveAuctionsWorker.BuildUpsert(NewAuction("garbage"), 123, isNew: true);
             var setOnInsert = Render(model)["$setOnInsert"].AsBsonDocument;
 
             Assert.True(model.IsUpsert);
             Assert.True(setOnInsert["Item"].AsBsonDocument.Contains("DecodeError"));
             Assert.Equal("garbage", setOnInsert["ItemBytes"].AsString);
+        }
+
+        [Fact]
+        public void BuildUpsert_ExistingAuction_SendsNoItemPayload()
+        {
+            var auction = NewAuction(Encode(Item("HYPERION")));
+
+            var update = Render(ActiveAuctionsWorker.BuildUpsert(auction, 123, isNew: false));
+
+            var set = update["$set"].AsBsonDocument;
+            Assert.False(set.Contains("ItemBytes"));
+            Assert.False(set.Contains("Item"));
+            Assert.Equal(123, set["LastSeen"].ToInt64());
+
+            var setOnInsert = update["$setOnInsert"].AsBsonDocument;
+            Assert.Equal(123, setOnInsert["FirstSeen"].ToInt64());
+            Assert.False(setOnInsert.Contains("ItemBytes"));
+            Assert.False(setOnInsert.Contains("Item"));
+            Assert.Null(auction.Item); // not decoded at all
         }
     }
 }

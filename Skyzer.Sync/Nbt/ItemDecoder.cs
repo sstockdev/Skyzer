@@ -110,13 +110,16 @@ namespace Skyzer.Sync.Nbt
                 using var json = JsonDocument.Parse(petInfo);
                 var root = json.RootElement;
 
+                if (root.ValueKind != JsonValueKind.Object)
+                    return null;
+
                 return new PetData
                 {
                     Type = ReadString(root, "type"),
                     Tier = ReadString(root, "tier"),
-                    Exp = root.TryGetProperty("exp", out var exp) && exp.ValueKind == JsonValueKind.Number ? exp.GetDouble() : null,
+                    Exp = root.TryGetProperty("exp", out var exp) && exp.ValueKind == JsonValueKind.Number && exp.TryGetDouble(out var expValue) ? expValue : null,
                     HeldItem = ReadString(root, "heldItem"),
-                    CandyUsed = root.TryGetProperty("candyUsed", out var candy) && candy.ValueKind == JsonValueKind.Number ? candy.GetInt32() : null,
+                    CandyUsed = root.TryGetProperty("candyUsed", out var candy) && candy.ValueKind == JsonValueKind.Number && candy.TryGetInt32(out var candyValue) ? candyValue : null,
                 };
             }
             catch (JsonException)

@@ -114,19 +114,25 @@ namespace Skyzer.Sync
         /// <param name="auctionsCollection">The mongodb auctions collection.</param>
         /// <param name="auctions">The auctions from a page of the active auctions API response.</param>
         /// <param name="cycle">The LastUpdatedTime of the active auction page's response.</param>
-        /// <returns>The number of BIN auctions on the page whose item failed to decode.</returns>
+        /// <returns>The number of new BIN auctions on the page whose item failed to decode.</returns>
         private static async Task<int> UpsertPageAsync(IMongoCollection<Auction> auctionsCollection, IEnumerable<Auction> auctions, long cycle, CancellationToken stoppingToken)
         {
             var models = new List<WriteModel<Auction>>();
             var decodeFailures = 0;
 
-            foreach (var auction in auctions)
-            {
-                // we don't care about non buy it now auctions
-                if (!auction.Bin)
-                    continue;
+            // we don't care about non buy it now auctions
+            var binAuctions = auctions.Where(a => a.Bin).ToList();
 
-                models.Add(BuildUpsert(auction, cycle));
+            // only new auctions need their item decoded and sent, the item of a stored auction never changes
+            var uuids = binAuctions.Select(a => a.Uuid).ToList();
+            var existing = (await auctionsCollection
+                .Find(Builders<Auction>.Filter.In(a => a.Uuid, uuids))
+                .Project(a => a.Uuid)
+                .ToListAsync(stoppingToken)).ToHashSet();
+
+            foreach (var auction in binAuctions)
+            {
+                models.Add(BuildUpsert(auction, cycle, isNew: !existing.Contains(auction.Uuid)));
 
                 if (auction.Item?.DecodeError != null)
                     decodeFailures++;
@@ -141,15 +147,19 @@ namespace Skyzer.Sync
         }
 
         /// <summary>
-        /// Decodes the auction's item and builds its upsert. Sets <see cref="Auction.LastSeen"/> to the cycle
-        /// every time. <see cref="Auction.FirstSeen"/>, <see cref="Auction.ItemBytes"/>, and <see cref="Auction.Item"/>
-        /// are only written when the auction is inserted for the first time, since an auction's item never changes.
+        /// Builds the auction's upsert. Sets <see cref="Auction.LastSeen"/> to the cycle every time.
+        /// <see cref="Auction.FirstSeen"/> is only written when the auction is inserted for the first time.
+        /// For new auctions the item is decoded and <see cref="Auction.ItemBytes"/> and <see cref="Auction.Item"/>
+        /// are sent as insert-only fields. For auctions already stored they are not sent at all, since an
+        /// auction's item never changes.
         /// </summary>
         /// <param name="auction">A BIN auction from the active auctions API response.</param>
         /// <param name="cycle">The LastUpdatedTime of the active auction page's response.</param>
-        internal static UpdateOneModel<Auction> BuildUpsert(Auction auction, long cycle)
+        /// <param name="isNew">Whether the auction is not yet stored in the auctions collection.</param>
+        internal static UpdateOneModel<Auction> BuildUpsert(Auction auction, long cycle, bool isNew)
         {
-            auction.Item = ItemDecoder.Decode(auction.ItemBytes);
+            if (isNew)
+                auction.Item = ItemDecoder.Decode(auction.ItemBytes);
 
             var fields = auction.ToBsonDocument();
             fields.Remove("_id");
@@ -161,9 +171,12 @@ namespace Skyzer.Sync
 
             // insert-only fields must not also be in $set, otherwise mongo rejects the update with a conflicting path error
             var insertOnly = new BsonDocument(nameof(Auction.FirstSeen), cycle);
-            if (auction.ItemBytes != null)
-                insertOnly[nameof(Auction.ItemBytes)] = auction.ItemBytes;
-            insertOnly[nameof(Auction.Item)] = auction.Item.ToBsonDocument();
+            if (isNew)
+            {
+                if (auction.ItemBytes != null)
+                    insertOnly[nameof(Auction.ItemBytes)] = auction.ItemBytes;
+                insertOnly[nameof(Auction.Item)] = auction.Item.ToBsonDocument();
+            }
 
             var update = new BsonDocument
             {
