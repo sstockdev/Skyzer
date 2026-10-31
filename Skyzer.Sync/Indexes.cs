@@ -22,11 +22,17 @@ namespace Skyzer.Sync
                 new CreateIndexModel<Auction>(auctionKeys.Descending(a => a.LastUpdated).Ascending(a => a.Uuid)),
                 // lifecycle queries, e.g. new listings and listings that stopped being seen
                 new CreateIndexModel<Auction>(auctionKeys.Ascending(a => a.LastSeen)),
+                // per-item queries on the decoded item
+                new CreateIndexModel<Auction>(auctionKeys.Ascending(a => a.Item!.SkyblockId)),
             ], stoppingToken);
 
-            await database.GetCollection<EndedAuction>("ended_auctions").Indexes.CreateOneAsync(
-                new CreateIndexModel<EndedAuction>(Builders<EndedAuction>.IndexKeys.Descending(e => e.Timestamp)),
-                cancellationToken: stoppingToken);
+            var endedKeys = Builders<EndedAuction>.IndexKeys;
+            await database.GetCollection<EndedAuction>("ended_auctions").Indexes.CreateManyAsync(
+            [
+                new CreateIndexModel<EndedAuction>(endedKeys.Descending(e => e.Timestamp)),
+                // recent sales of a given item, e.g. for training data
+                new CreateIndexModel<EndedAuction>(endedKeys.Ascending(e => e.Item!.SkyblockId).Descending(e => e.Timestamp)),
+            ], stoppingToken);
         }
     }
 }

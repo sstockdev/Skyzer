@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Skyzer.Shared.Models;
+using Skyzer.Sync.Nbt;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -53,7 +54,7 @@ namespace Skyzer.Sync
 
                     var cycle = firstPage.LastUpdated;
 
-                    await UpsertPageAsync(auctionsCollection, firstPage.Auctions, cycle, stoppingToken);
+                    LogDecodeFailures(await UpsertPageAsync(auctionsCollection, firstPage.Auctions, cycle, stoppingToken), firstPage.Page);
 
                     await Parallel.ForAsync(firstPage.Page + 1, firstPage.TotalPages, async (i, stoppingToken) =>
                     {
@@ -66,7 +67,7 @@ namespace Skyzer.Sync
                                 return; // continue; equivalent for Parallel.ForAsync
                             }
 
-                            await UpsertPageAsync(auctionsCollection, page.Auctions, cycle, stoppingToken);
+                            LogDecodeFailures(await UpsertPageAsync(auctionsCollection, page.Auctions, cycle, stoppingToken), i);
                         }
                         catch (HttpRequestException ex)
                         {
@@ -99,16 +100,25 @@ namespace Skyzer.Sync
         }
 
         /// <summary>
+        /// Logs one warning for a page if any of its auctions' items failed to decode.
+        /// </summary>
+        private void LogDecodeFailures(int failures, int page)
+        {
+            if (failures > 0)
+                logger.LogWarning("{Count} auctions failed to decode on page {Page}", failures, page);
+        }
+
+        /// <summary>
         /// Upserts a page of auctions in a single bulk write. Only BIN auctions are stored.
-        /// Sets <see cref="Auction.LastSeen"/> to the cycle every time, and <see cref="Auction.FirstSeen"/>
-        /// only when the auction is inserted for the first time.
         /// </summary>
         /// <param name="auctionsCollection">The mongodb auctions collection.</param>
         /// <param name="auctions">The auctions from a page of the active auctions API response.</param>
         /// <param name="cycle">The LastUpdatedTime of the active auction page's response.</param>
-        private static async Task UpsertPageAsync(IMongoCollection<Auction> auctionsCollection, IEnumerable<Auction> auctions, long cycle, CancellationToken stoppingToken)
+        /// <returns>The number of BIN auctions on the page whose item failed to decode.</returns>
+        private static async Task<int> UpsertPageAsync(IMongoCollection<Auction> auctionsCollection, IEnumerable<Auction> auctions, long cycle, CancellationToken stoppingToken)
         {
             var models = new List<WriteModel<Auction>>();
+            var decodeFailures = 0;
 
             foreach (var auction in auctions)
             {
@@ -116,28 +126,53 @@ namespace Skyzer.Sync
                 if (!auction.Bin)
                     continue;
 
-                var fields = auction.ToBsonDocument();
-                fields.Remove("_id");
-                fields.Remove(nameof(Auction.FirstSeen));
-                fields.Remove(nameof(Auction.LastSeen));
-                fields[nameof(Auction.LastSeen)] = cycle;
+                models.Add(BuildUpsert(auction, cycle));
 
-                // FirstSeen must not also be in $set, otherwise mongo rejects the update with a conflicting path error
-                var update = new BsonDocument
-                {
-                    { "$set", fields },
-                    { "$setOnInsert", new BsonDocument(nameof(Auction.FirstSeen), cycle) }
-                };
-
-                var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, auction.Uuid);
-                models.Add(new UpdateOneModel<Auction>(filter, update) { IsUpsert = true });
+                if (auction.Item?.DecodeError != null)
+                    decodeFailures++;
             }
 
             // BulkWriteAsync throws when given no models
             if (models.Count == 0)
-                return;
+                return decodeFailures;
 
             await auctionsCollection.BulkWriteAsync(models, new BulkWriteOptions { IsOrdered = false }, stoppingToken);
+            return decodeFailures;
+        }
+
+        /// <summary>
+        /// Decodes the auction's item and builds its upsert. Sets <see cref="Auction.LastSeen"/> to the cycle
+        /// every time. <see cref="Auction.FirstSeen"/>, <see cref="Auction.ItemBytes"/>, and <see cref="Auction.Item"/>
+        /// are only written when the auction is inserted for the first time, since an auction's item never changes.
+        /// </summary>
+        /// <param name="auction">A BIN auction from the active auctions API response.</param>
+        /// <param name="cycle">The LastUpdatedTime of the active auction page's response.</param>
+        internal static UpdateOneModel<Auction> BuildUpsert(Auction auction, long cycle)
+        {
+            auction.Item = ItemDecoder.Decode(auction.ItemBytes);
+
+            var fields = auction.ToBsonDocument();
+            fields.Remove("_id");
+            fields.Remove(nameof(Auction.FirstSeen));
+            fields.Remove(nameof(Auction.LastSeen));
+            fields.Remove(nameof(Auction.ItemBytes));
+            fields.Remove(nameof(Auction.Item));
+            fields[nameof(Auction.LastSeen)] = cycle;
+
+            // insert-only fields must not also be in $set, otherwise mongo rejects the update with a conflicting path error
+            var insertOnly = new BsonDocument(nameof(Auction.FirstSeen), cycle);
+            if (auction.ItemBytes != null)
+                insertOnly[nameof(Auction.ItemBytes)] = auction.ItemBytes;
+            insertOnly[nameof(Auction.Item)] = auction.Item.ToBsonDocument();
+
+            var update = new BsonDocument
+            {
+                { "$set", fields },
+                { "$setOnInsert", insertOnly }
+            };
+
+            var filter = Builders<Auction>.Filter.Eq(a => a.Uuid, auction.Uuid);
+            return new UpdateOneModel<Auction>(filter, update) { IsUpsert = true };
         }
     }
 }

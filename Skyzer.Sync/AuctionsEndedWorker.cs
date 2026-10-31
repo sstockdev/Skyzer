@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using Skyzer.Shared.Models;
+using Skyzer.Sync.Nbt;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -60,6 +61,13 @@ namespace Skyzer.Sync
                     }
 
                     var endedAuctions = page.Auctions.Where(a => a.AuctionId != null).ToList();
+
+                    foreach (var ended_auction in endedAuctions)
+                        ended_auction.Item = ItemDecoder.Decode(ended_auction.ItemBytes);
+
+                    var decodeFailures = endedAuctions.Count(e => e.Item?.DecodeError != null);
+                    if (decodeFailures > 0)
+                        logger.LogWarning("{Count} ended auctions failed to decode in cycle {Cycle}", decodeFailures, page.LastUpdated);
 
                     // Store every ended auction (BIN and regular) as its own sale, even if we never saw it
                     // while it was active. Auctions sniped within a single cycle only show up here.
