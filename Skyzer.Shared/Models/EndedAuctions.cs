@@ -65,5 +65,12 @@ namespace Skyzer.Shared.Models
         /// </summary>
         [JsonPropertyName("item_bytes")]
         public string? ItemBytes { get; set; }
+
+        /// <summary>
+        /// The decoded contents of <see cref="ItemBytes"/>. Not provided by Hypixel API.
+        /// </summary>
+        [JsonIgnore]
+        [BsonIgnoreIfNull]
+        public ItemData? Item { get; set; }
     }
 }

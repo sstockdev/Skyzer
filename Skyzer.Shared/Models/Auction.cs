@@ -157,5 +157,12 @@ namespace Skyzer.Shared.Models
         [JsonIgnore]
         [BsonIgnoreIfNull]
         public long? LastSeen { get; set; }
+
+        /// <summary>
+        /// The decoded contents of <see cref="ItemBytes"/>. Not provided by Hypixel API.
+        /// </summary>
+        [JsonIgnore]
+        [BsonIgnoreIfNull]
+        public ItemData? Item { get; set; }
     }
 }
