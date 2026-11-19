@@ -5,7 +5,7 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ./data/db:/data/db
+      - mongo-data:/data/db
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
@@ -51,3 +51,6 @@ services:
     environment:
       ConnectionStrings__MongoDB: mongodb://db:27017
     restart: unless-stopped
+
+volumes:
+  mongo-data:

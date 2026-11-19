@@ -6,6 +6,14 @@ For this to work we need data to train with, that is where `Skyzer.Sync` comes i
 
 Once we have data, we want to visualize that data. That is where `Skyzer.Dashboard` comes in. `Skyzer.Dashboard` is a .NET Blazor project that was created with the goal of visualizing the MongoDB database.
 
+## Running it
+
+```shell
+git clone https://github.com/sstockdev/Skyzer
+docker compose build --no-cache
+docker compose up -d
+```
+
 ## To do
 
 - [ ] Decide what the model should predict. The plan is to start with the fair sale price of a BIN item, based on its decoded attributes. Once `ended_auctions` has collected enough decoded sales, turn them into a training data set.
